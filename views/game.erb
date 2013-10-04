@@ -1,0 +1,23 @@
+<h3>BlackJack Game </h3>
+
+<div class = "game_section" id = "player_section">
+<h4><%= session[:player_name] %>'s cards</h4>
+<% session[:player_cards].each do |card| %>
+<%=cards_category(card)%>
+<%end%>
+
+</div>
+
+<div class ="game_section" id = "dealer_section">
+<h4> Dealer's cards</h4>
+<% session[:dealer_cards].each_with_index do |card, i| %>
+<% if session[:turn]!="dealer" && i ==0 %>
+	<img src = "/image/cards/cover.jpg" >
+<%else%>
+    <%=cards_category(card)%>
+<%end%>
+
+<%end%>
+
+</div>
+
