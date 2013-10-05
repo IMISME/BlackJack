@@ -38,7 +38,7 @@ helpers do
    		else
    			total += s.to_i ==0 ? 10 : s.to_i
    		end
-   	end
+   	  end
 
    	sum.select{|element|element =="A"}.count.times do 
    		if total >21
@@ -56,6 +56,14 @@ helpers do
  	session[:player_cards] = []
  	session[:dealer_cards] = []
    end #end cards_shuffle
+
+   def player_hit(player_total)
+		if player_total	== BlackJack_Goal
+    		winner!("#{session[:player_name]} has hit Blackjack!")
+    	elsif player_total > BlackJack_Goal
+    		loser!("BUST! #{session[:player_name]}'s cards add up to #{player_total}.")
+    	end
+   end #end player hit
 
    def winner!(msg)
     @show_hit_stay = false
@@ -81,11 +89,27 @@ helpers do
   		end
    end #end compare
 
+   def dealer_or_player_win(player_total,dealer_total)
+   	 if dealer_total == BlackJack_Goal 
+        loser!("#{session[:player_name]} stayed at #{player_total}, and the dealer hit #{dealer_total}.")
+        @dealer_going_to_hit = false
+     elsif dealer_total > BlackJack_Goal
+        winner!("#{session[:player_name]} stayed at #{player_total}, and the dealer busted at #{dealer_total}.")
+        @dealer_going_to_hit= false
+     elsif dealer_total > Dealer_min_Goal
+        compare(player_total,dealer_total)
+        @dealer_going_to_hit = false
+     else
+        @dealer_going_to_hit = true
+     end
+   end #end of comparing dealer and player
+
 end #end helpers
 
 before do 
 	@show_hit_stay = true
 	@new_game = true
+	@dealer_going_to_hit = false
 end
 
 get '/' do 
@@ -113,36 +137,21 @@ end
 post '/game' do
     	if params[:player_hit] == "true"
     		session[:player_cards] << session[:deck].pop
-    	elsif params[:player_stay] =="true"
+    		player_hit(cards_total(session[:player_cards]))
+    	end
+
+    	if params[:player_stay] == "true"
     		@success = "#{session[:player_name]} has chosen to stay."
- 			 @show_hit_stay = false
- 			 session[:turn] = "dealer"
+            @show_hit_stay = false
+            session[:turn] = "dealer"
+            dealer_or_player_win(cards_total(session[:player_cards]),cards_total(session[:dealer_cards]))
     	end
-    
-    player_total=cards_total(session[:player_cards])
-    dealer_total=cards_total(session[:dealer_cards])
-    
-    	if player_total	== BlackJack_Goal
-    		winner!("#{session[:player_name]} has hit Blackjack!")
-    	elsif player_total > BlackJack_Goal
-    		loser!("BUST! #{session[:player_name]}'s cards add up to #{player_total}.")
-    	end
-
-     	if params[:player_stay]=="true" || params[:dealer_hit]=="true"
-     		if dealer_total == BlackJack_Goal 
-    			loser!("#{session[:player_name]} stayed at #{player_total}, and the dealer hit #{dealer_total}.")
-  			elsif dealer_total > BlackJack_Goal
-   				 winner!("#{session[:player_name]} stayed at #{player_total}, and the dealer busted at #{dealer_total}.")
-   		    elsif dealer_total > Dealer_min_Goal
-   		    	compare(player_total,dealer_total)
-   		    else
-   		    	@dealer_going_to_hit = true
-   			end
-   		end
-
-   		if params[:dealer_hit]="true"
-   			session[:dealer_cards] << session[:deck].pop
-   		end
+    		
+    	if params[:dealer_hit] == "true"
+            session[:dealer_cards] << session[:deck].pop
+            dealer_or_player_win(cards_total(session[:player_cards]),cards_total(session[:dealer_cards]))
+        end
+        
 
     erb :game
 end #end post 'game'
