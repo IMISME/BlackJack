@@ -1,4 +1,23 @@
-<h3>BlackJack Game </h3>
+
+<h4><%=session[:player_name]%> has <%=session[:player_money]%> and place a bet <%=session[:player_bet]%></h4>
+
+
+<%if @play_again%>
+	<h5>Do you want to play again</h5>
+		<div class = "row">
+			<div class = "span1">
+				<form action ='/place_bet' method = 'post'>
+					<input type = "submit" class ="btn btn-primary" value = "Yes" />		
+				</form>
+			</div>
+
+			<div class = "span1">
+				<form action = '/game_over' method = 'post'>
+					<input type = "submit" class = "btn btn-primary" value = "No" />		
+				</form>	
+			</div>
+	</div>
+<%end%> <!--End of play_again  -->
 <div class ="row">
 		<div class = "game_section" id = "player_section">
 			<h4><%= session[:player_name] %>'s cards</h4>
@@ -50,5 +69,6 @@
 		</form>
 
 <%end%>
+
 
 

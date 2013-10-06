@@ -5,6 +5,7 @@ require 'pry'
 set :sessions, true
 BlackJack_Goal = 21
 Dealer_min_Goal = 17
+Initial_money = 100
 
 helpers do 
 
@@ -67,16 +68,22 @@ helpers do
 
    def winner!(msg)
     @show_hit_stay = false
-    @success = "<strong>#{session[:player_name]} wins !</strong> #{msg}"
+    @success = "<strong>#{session[:player_name]} wins the bet #{session[:player_bet]}!</strong> #{msg}"
+    session[:player_money]=session[:player_money]+session[:player_bet]
+    @play_again = true
    end
 
    def loser!(msg)
    	@show_hit_stay = false
-   	@error = "<strong>#{session[:player_name]} lose!</strong> #{msg}"
+   	@error = "<strong>#{session[:player_name]} lose the bet #{session[:player_bet]}!</strong> #{msg}"
+    session[:player_money]=session[:player_money]-session[:player_bet]
+    @play_again = true
    end
 
    def tie!(msg)
    	@success = "<strong>It's a tie</strong>#{msg}"
+    @show_hit_stay = false
+    @play_again = true
    end
 
    def compare(player_total,dealer_total)
@@ -121,6 +128,7 @@ get '/' do
 end 
 
 get '/new_game' do
+  session[:player_money] = Initial_money
 	erb :new_game
 end
 
@@ -131,8 +139,28 @@ post '/new_game' do
     end
     session[:player_name] = params[:player_name_field]
     session[:turn]= session[:player_name]
-    redirect '/game'
+    redirect '/place_bet'
 end
+
+get '/place_bet' do 
+  erb :place_bet
+end
+
+post '/place_bet' do 
+  session[:turn]=session[:player_name]
+  if params[:bet_amount].nil? || params[:bet_amount].to_i ==0
+    @error ="Please enter a bet"
+    halt erb(:place_bet)
+  elsif params[:bet_amount].to_i > session[:player_money].to_i
+    @error="You can't bet more than $#{session[:player_money]}"
+    halt erb(:place_bet)
+  else
+    session[:player_bet]=params[:bet_amount].to_i
+    redirect '/game'
+  end
+    
+end
+
 
 post '/game' do
     	if params[:player_hit] == "true"
@@ -151,7 +179,10 @@ post '/game' do
             session[:dealer_cards] << session[:deck].pop
             dealer_or_player_win(cards_total(session[:player_cards]),cards_total(session[:dealer_cards]))
         end
-        
+
+      if params[:play_again] == "true"
+        redirect  '/game'
+      end
 
     erb :game
 end #end post 'game'
@@ -167,3 +198,8 @@ get '/game' do
  end
  erb :game
 end 
+
+post '/game_over' do 
+erb :game_over
+end
+
