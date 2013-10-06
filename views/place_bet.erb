@@ -1,0 +1,6 @@
+<h2>Do you want to make a bet?</h2>
+<h3><%=session[:player_name]%> has <%=session[:player_money].to_i%></h3>
+<form action ='/place_bet' method = 'post' >
+Placing Bet: <input type = "text" name = "bet_amount" />
+<input type = "submit" class = "btn"/>
+</form>
